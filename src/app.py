@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from crewai_backend import analyze_company
 import pandas as pd
 import plotly.express as px
-from utils.helpers import get_openai_api_key
+from utils.helpers import get_openai_api_key, get_serper_api_key
 
 
 
