@@ -2,7 +2,7 @@ from crewai import Agent, Task, Crew, Process
 from sec_filing_tool import SecFilingTool
 
 # Initialize SEC Filing Tool
-sec_tool = SecFilingTool()
+sec_tool = SecFilingTool
 
 # Agent: Financial Analyst
 financial_analyst = Agent(

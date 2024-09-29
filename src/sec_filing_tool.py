@@ -3,7 +3,6 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-@tool
 class SecFilingTool:
     """
     A tool to fetch and parse SEC 10-K filings from the EDGAR database.
@@ -40,7 +39,6 @@ class SecFilingTool:
         """Parses the metadata from the filing data, including CIK, Accession Number, SIC code, etc."""
         soup = BeautifulSoup(filing_data, 'html.parser')
 
-        # Example of extracting key metadata
         metadata = {}
 
         # Accession Number
@@ -89,17 +87,31 @@ class SecFilingTool:
 
         return financial_data
 
-    def run(self, company_ticker: str) -> dict:
-        """Runs the tool to fetch and parse 10-K data for the given company ticker."""
-        filing_data = self.fetch_10k(company_ticker)
-        if "Error" in filing_data:
-            return {"Error": filing_data}
-        
-        metadata = self.parse_metadata(filing_data)
-        financial_data = self.parse_financial_data(filing_data)
 
-        # Combine both metadata and financial data into a single result
-        return {
-            "Metadata": metadata,
-            "Financial Data": financial_data
-        }
+@tool
+def sec_filing_tool(company_ticker: str) -> dict:
+    """
+    A tool that uses SecFilingTool class to fetch and parse 10-K data for a given company ticker.
+
+    Parameters:
+    ----------
+    company_ticker : str
+        The ticker symbol of the company to analyze.
+    
+    Returns:
+    --------
+    dict
+        A dictionary containing the metadata and financial data of the company's 10-K filing.
+    """
+    tool = SecFilingTool()
+    filing_data = tool.fetch_10k(company_ticker)
+    if "Error" in filing_data:
+        return {"Error": filing_data}
+    
+    metadata = tool.parse_metadata(filing_data)
+    financial_data = tool.parse_financial_data(filing_data)
+
+    return {
+        "Metadata": metadata,
+        "Financial Data": financial_data
+    }
