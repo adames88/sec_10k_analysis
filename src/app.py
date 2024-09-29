@@ -7,7 +7,8 @@ import pandas as pd
 import plotly.express as px
 from utils.helpers import get_openai_api_key, get_serper_api_key
 
-
+# Load environment variables from .env file
+load_dotenv()
 
 # Set OpenAI model key and serper key:
 openai_api_key = get_openai_api_key()
