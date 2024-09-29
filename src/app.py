@@ -6,13 +6,13 @@ from dotenv import load_dotenv
 from crewai_backend import analyze_company
 import pandas as pd
 import plotly.express as px
+from utils.helpers import get_openai_api_key
 
 
-# Load environment variables from .env file
-load_dotenv()
 
-# Access the OpenAI API Key
-openai_api_key = os.getenv("OPENAI_API_KEY")
+# Set OpenAI model key and serper key
+openai_api_key = get_openai_api_key()
+serper_api_key = get_serper_api_key()
 
 if not openai_api_key:
     raise ValueErro
