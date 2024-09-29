@@ -2,7 +2,7 @@
 FROM python:3.9-slim
 
 # Set the working directory inside the container
-WORKDIR /sec_10k_analysis
+WORKDIR /app/src
 
 # Copy the requirements.txt to install dependencies
 COPY requirements.txt ./

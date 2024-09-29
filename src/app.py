@@ -1,5 +1,5 @@
 import streamlit as st
-from .crewai_backend import analyze_company
+from src.crewai_backend import analyze_company
 import pandas as pd
 import plotly.express as px
 
