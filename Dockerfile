@@ -11,7 +11,7 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the app's source code
-COPY ./src /sec_10k_analysis/src
+COPY ./src /app/src
 
 # Expose the port Streamlit uses
 EXPOSE 8501
