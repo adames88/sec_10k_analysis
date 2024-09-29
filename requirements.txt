@@ -1,6 +1,12 @@
 streamlit
 crewAI
 requests
-beautifulsoup4
+crewai==0.28.8
+crewai_tools==0.1.6
+langchain_community==0.0.29
+chroma
+pysqlite3-binary
+pillow
 plotly
 pandas
+beautifulsoup4
