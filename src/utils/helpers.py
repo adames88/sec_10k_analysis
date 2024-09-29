@@ -1,19 +1,26 @@
-from dotenv import load_dotenv, find_dotenv
 import os
+from dotenv import load_dotenv
 
-# these expect to find a .env file at the directory above                                                                                                                     # the format for that file is (without the comment)                                                                                                                                       #API_KEYNAME=AStringThatIsTheLongAPIKeyFromSomeService
 def load_env():
-    _ = load_dotenv(find_dotenv())
+    """Load environment variables from the .env file."""
+    load_dotenv()
 
-def get_openai_api_key():
+def get_openai_api_key() -> str:
+    """Retrieve the OpenAI API Key from environment variables."""
     load_env()
     openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        raise ValueError("OPENAI_API_KEY is not set in the environment.")
     return openai_api_key
 
-def get_serper_api_key():
+def get_serper_api_key() -> str:
+    """Retrieve the Serper API Key from environment variables."""
     load_env()
     serper_api_key = os.getenv("SERPER_API_KEY")
+    if not serper_api_key:
+        raise ValueError("SERPER_API_KEY is not set in the environment.")
     return serper_api_key
+
 
 
 # break line every 80 characters if line is longer than 80 characters
