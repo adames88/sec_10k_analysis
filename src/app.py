@@ -2,10 +2,20 @@ import streamlit as st
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-
+from dotenv import load_dotenv
 from crewai_backend import analyze_company
 import pandas as pd
 import plotly.express as px
+
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Access the OpenAI API Key
+openai_api_key = os.getenv("OPENAI_API_KEY")
+
+if not openai_api_key:
+    raise ValueErro
 
 # Streamlit layout
 st.title("SEC 10-K Analysis Dashboard")
