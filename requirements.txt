@@ -1,0 +1,6 @@
+streamlit
+crewAI
+requests
+beautifulsoup4
+plotly
+pandas
