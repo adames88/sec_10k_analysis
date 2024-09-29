@@ -10,7 +10,7 @@ from utils.helpers import get_openai_api_key
 
 
 
-# Set OpenAI model key and serper key
+# Set OpenAI model key and serper key:
 openai_api_key = get_openai_api_key()
 serper_api_key = get_serper_api_key()
 
