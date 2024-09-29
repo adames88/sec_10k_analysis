@@ -6,6 +6,9 @@ services:
       - "8501:8501"
     volumes:
       - .:/app
+    version: '3'
+    env_file:
+      - .env  # Specify the .env file to load environment variables
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - SERPER_API_KEY=${SERPER_API_KEY}

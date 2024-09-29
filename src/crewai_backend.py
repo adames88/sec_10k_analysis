@@ -1,9 +1,6 @@
 from crewai import Agent, Task, Crew, Process
 from sec_filing_tool import SecFilingTool
-from utils.helpers import get_openai_api_key, get_serper_api_key, load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
+from utils.helpers import get_openai_api_key, get_serper_api_key
 
 # Set OpenAI model key and serper key:
 openai_api_key = get_openai_api_key()
