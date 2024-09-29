@@ -1,5 +1,12 @@
 from crewai import Agent, Task, Crew, Process
 from sec_filing_tool import SecFilingTool
+from dotenv import load_dotenv, find_dotenv
+import os
+
+# Set OpenAI model key and serper key:
+openai_api_key = get_openai_api_key()
+serper_api_key = get_serper_api_key()
+
 
 # Initialize SEC Filing Tool
 sec_tool = SecFilingTool
