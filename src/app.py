@@ -2,7 +2,6 @@ import streamlit as st
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-from dotenv import load_dotenv
 from crewai_backend import analyze_company
 import pandas as pd
 import plotly.express as px
