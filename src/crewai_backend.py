@@ -1,5 +1,5 @@
 from crewai import Agent, Task, Crew, Process
-from src.sec_filing_tool import SecFilingTool
+from sec_filing_tool import SecFilingTool
 
 # Initialize SEC Filing Tool
 sec_tool = SecFilingTool()
