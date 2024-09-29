@@ -5,11 +5,30 @@ import pandas as pd
 
 @tool
 class SecFilingTool:
+    """
+    A tool to fetch and parse SEC 10-K filings from the EDGAR database.
+    
+    Methods:
+    --------
+    fetch_10k(company_ticker: str) -> str:
+        Fetches the 10-K filings for a given company ticker.
+
+    parse_metadata(filing_data: str) -> dict:
+        Parses the metadata from the 10-K filings, such as Accession Number, CIK, etc.
+
+    parse_financial_data(filing_data: str) -> dict:
+        Extracts financial data like revenue, net income, and assets from the 10-K filings.
+
+    run(company_ticker: str) -> dict:
+        Fetches and parses both metadata and financial data for a given company ticker.
+    """
+
     def __init__(self):
         self.base_url = "https://www.sec.gov/cgi-bin/browse-edgar"
         self.headers = {"User-Agent": "Your Company Name"}
 
-    def fetch_10k(self, company_ticker):
+    def fetch_10k(self, company_ticker: str) -> str:
+        """Fetches the latest 10-K filing for the given company ticker."""
         url = f"{self.base_url}?action=getcompany&CIK={company_ticker}&type=10-k&owner=exclude&count=1"
         response = requests.get(url, headers=self.headers)
         if response.status_code == 200:
@@ -17,15 +36,15 @@ class SecFilingTool:
         else:
             return f"Error fetching 10-K data for {company_ticker}"
 
-    def parse_metadata(self, filing_data):
-        # Using BeautifulSoup to parse the HTML content from EDGAR
+    def parse_metadata(self, filing_data: str) -> dict:
+        """Parses the metadata from the filing data, including CIK, Accession Number, SIC code, etc."""
         soup = BeautifulSoup(filing_data, 'html.parser')
 
-        # Example of extracting key metadata based on JSON file details
+        # Example of extracting key metadata
         metadata = {}
 
         # Accession Number
-        adsh = soup.find('adsh')  # Assuming the HTML/XML contains this field
+        adsh = soup.find('adsh')
         if adsh:
             metadata['Accession Number'] = adsh.get_text()
 
@@ -33,11 +52,6 @@ class SecFilingTool:
         cik = soup.find('cik')
         if cik:
             metadata['CIK'] = cik.get_text()
-
-        # Registrant Name
-        registrant = soup.find('name')
-        if registrant:
-            metadata['Registrant'] = registrant.get_text()
 
         # SIC Code (Standard Industrial Classification)
         sic = soup.find('sic')
@@ -49,25 +63,14 @@ class SecFilingTool:
         if public_float:
             metadata['Public Float'] = public_float.get_text()
 
-        # Filing Status
-        status = soup.find('afs')
-        if status:
-            metadata['Accelerated Filer Status'] = status.get_text()
-
-        # Fiscal Year End Date
-        fiscal_year_end = soup.find('fye')
-        if fiscal_year_end:
-            metadata['Fiscal Year End'] = fiscal_year_end.get_text()
-
         return metadata
 
-    def parse_financial_data(self, filing_data):
-        # Parse financial data such as revenue, net income, and assets
+    def parse_financial_data(self, filing_data: str) -> dict:
+        """Parses financial data such as revenue, net income, and assets from the 10-K filings."""
         soup = BeautifulSoup(filing_data, 'html.parser')
 
         financial_data = {}
 
-        # Example of extracting structured financial data based on metadata details
         revenue = soup.find('revenue')
         if revenue:
             financial_data['Revenue'] = revenue.get_text()
@@ -86,19 +89,17 @@ class SecFilingTool:
 
         return financial_data
 
-    def run(self, company_ticker):
+    def run(self, company_ticker: str) -> dict:
+        """Runs the tool to fetch and parse 10-K data for the given company ticker."""
         filing_data = self.fetch_10k(company_ticker)
         if "Error" in filing_data:
-            return filing_data
+            return {"Error": filing_data}
         
         metadata = self.parse_metadata(filing_data)
         financial_data = self.parse_financial_data(filing_data)
 
-        # Combine both metadata and financial data into a single response
-        result = {
+        # Combine both metadata and financial data into a single result
+        return {
             "Metadata": metadata,
             "Financial Data": financial_data
         }
-
-        return result
-
