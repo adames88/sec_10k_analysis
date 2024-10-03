@@ -4,50 +4,34 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from crewai_backend import analyze_company
 import pandas as pd
-import plotly.express as px
 from utils.helpers import get_openai_api_key, get_serper_api_key
 
 # Set OpenAI model key and serper key:
 openai_api_key = get_openai_api_key()
 serper_api_key = get_serper_api_key()
 
-if not openai_api_key:
-    raise ValueErro
 
-# Streamlit layout
 st.title("SEC 10-K Analysis Dashboard")
 
-# User input for the company name
-company_name = st.text_input("Enter a company name (e.g., AAPL for Apple):")
+# Input for the company name
+company_name = st.text_input("Enter a company name (e.g., Apple, Tesla):")
 
-# When the user submits, trigger the analysis
+# Trigger the analysis
 if st.button("Analyze"):
     if company_name:
         st.write(f"Analyzing {company_name}...")
         result = analyze_company(company_name)
 
-        # Display Metadata
-        st.write("### Metadata")
-        if "Metadata" in result:
-            metadata = result["Metadata"]
-            st.json(metadata)
-
-        # Display Financial Data
-        st.write("### Financial Data")
-        if "Financial Data" in result:
-            financial_data = result["Financial Data"]
-            
-            # Create a DataFrame for better presentation
-            df = pd.DataFrame({
-                "Metric": ["Revenue", "Net Income", "Assets", "Liabilities"],
-                "Value": [financial_data.get("Revenue"), financial_data.get("Net Income"), financial_data.get("Assets"), financial_data.get("Liabilities")]
-            })
-            st.dataframe(df)
-
-            # Plot financial data
-            fig = px.bar(df, x="Metric", y="Value", title=f"Financial Metrics for {company_name}")
-            st.plotly_chart(fig)
+        # Display the result
+        if "Error" in result:
+            st.error(result["Error"])
         else:
-            st.error("Financial data not available.")
+            st.write("### Summary Report")
+            st.text(result["Summary Report"])
+
+            if "10-K Filings" in result:
+                st.write("### 10-K Filings")
+                filings_df = pd.DataFrame(result["10-K Filings"])
+                st.dataframe(filings_df)
     else:
-        st.warning("Please enter a company name.")
+        st.warning("Please enter a valid company name.")

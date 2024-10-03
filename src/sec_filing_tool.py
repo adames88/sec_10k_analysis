@@ -1,117 +1,118 @@
-from crewai_tools import tool
 import requests
-from bs4 import BeautifulSoup
-import pandas as pd
+import logging
 
 class SecFilingTool:
-    """
-    A tool to fetch and parse SEC 10-K filings from the EDGAR database.
-    
-    Methods:
-    --------
-    fetch_10k(company_ticker: str) -> str:
-        Fetches the 10-K filings for a given company ticker.
-
-    parse_metadata(filing_data: str) -> dict:
-        Parses the metadata from the 10-K filings, such as Accession Number, CIK, etc.
-
-    parse_financial_data(filing_data: str) -> dict:
-        Extracts financial data like revenue, net income, and assets from the 10-K filings.
-
-    run(company_ticker: str) -> dict:
-        Fetches and parses both metadata and financial data for a given company ticker.
-    """
-
     def __init__(self):
-        self.base_url = "https://www.sec.gov/cgi-bin/browse-edgar"
-        self.headers = {"User-Agent": "Your Company Name"}
+        # New endpoint based on correct structure
+        self.edgar_company_search_url = "https://efts.sec.gov/LATEST/search-index"
+        self.headers = {"User-Agent": "YourAppName"}
 
-    def fetch_10k(self, company_ticker: str) -> str:
-        """Fetches the latest 10-K filing for the given company ticker."""
-        url = f"{self.base_url}?action=getcompany&CIK={company_ticker}&type=10-k&owner=exclude&count=1"
-        response = requests.get(url, headers=self.headers)
+    def get_cik(self, company_name: str) -> str:
+        """
+        Fetch the CIK (Central Index Key) for the given company name using SEC's EDGAR API.
+        This function will attempt to match the exact company based on the 'display_names' field.
+        """
+        url = self.edgar_company_search_url
+        params = {
+            "q": company_name,  # Query company name
+            "entity": "company",  # Ensure entity type is specified
+        }
+
+        try:
+            response = requests.get(url, params=params, headers=self.headers)
+            if response.status_code != 200:
+                logging.error(f"Failed to fetch CIK for {company_name}. Status code: {response.status_code}")
+                return None
+
+            data = response.json()
+
+            # Print full response for debugging purposes
+            print(f"Full response data for {company_name}: {data}")
+
+            # Ensure hits exist and check for exact match on 'display_names'
+            hits = data.get('hits', {}).get('hits', [])
+            if not hits:
+                logging.error(f"No results found for {company_name}. Response data: {data}")
+                return None
+
+            # Loop through hits and look for exact match on 'display_names'
+            for hit in hits:
+                display_name = hit['_source'].get('display_names', [''])[0]
+                if company_name.lower() in display_name.lower():
+                    cik = hit['_source'].get('ciks', [None])[0]
+                    if cik:
+                        print(f"CIK for {company_name}: {cik}")
+                        return cik
+
+            logging.error(f"CIK not found for {company_name}. Response data: {data}")
+            return None
+
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Request exception occurred: {e}")
+            return None
+
+        except Exception as e:
+            logging.error(f"Error parsing CIK for {company_name}: {e}")
+            return None
+
+
+
+    def fetch_submissions(self, company_cik: str) -> dict:
+        """
+        Fetch the SEC filings for a given company CIK.
+        """
+        submissions_url = f"https://data.sec.gov/submissions/CIK{company_cik}.json"
+        response = requests.get(submissions_url, headers=self.headers)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"Error": f"Failed to fetch data. Status code: {response.status_code}"}
+
+    def get_10k_filings(self, company_data: dict) -> list:
+        """
+        Extract 10-K filings and construct the URLs.
+        """
+        filings = company_data.get("filings", {}).get("recent", {})
+        form_type = filings.get("form", [])
+        accession_numbers = filings.get("accessionNumber", [])
+        filing_dates = filings.get("filingDate", [])
+        
+        ten_k_filings = []
+
+        # Loop through filings to find 10-K forms
+        for i, form in enumerate(form_type):
+            if form == "10-K":
+                ten_k_filings.append({
+                    "Accession Number": accession_numbers[i],
+                    "Filing Date": filing_dates[i],
+                    "Filing URL": f"https://www.sec.gov/Archives/edgar/data/{company_data['cik']}/{accession_numbers[i].replace('-', '')}/{accession_numbers[i]}-index.html"
+                })
+        
+        return ten_k_filings
+
+    def extract_submission_text_url(self, filing_url: str) -> str:
+        """
+        Scrape the filing URL page to find the "Complete submission text files" link.
+        """
+        response = requests.get(filing_url, headers=self.headers)
+        if response.status_code != 200:
+            return {"Error": f"Failed to load the filing page. Status code: {response.status_code}"}
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Look for the "Complete submission text files" link
+        link = soup.find('a', text='Complete submission text files')
+        if link and link.get('href'):
+            return f"https://www.sec.gov{link.get('href')}"
+        else:
+            return {"Error": "Complete submission text file not found"}
+
+    def download_submission_text(self, submission_text_url: str) -> str:
+        """
+        Download the content from the "Complete submission text files" link.
+        """
+        response = requests.get(submission_text_url, headers=self.headers)
         if response.status_code == 200:
             return response.text
         else:
-            return f"Error fetching 10-K data for {company_ticker}"
-
-    def parse_metadata(self, filing_data: str) -> dict:
-        """Parses the metadata from the filing data, including CIK, Accession Number, SIC code, etc."""
-        soup = BeautifulSoup(filing_data, 'html.parser')
-
-        metadata = {}
-
-        # Accession Number
-        adsh = soup.find('adsh')
-        if adsh:
-            metadata['Accession Number'] = adsh.get_text()
-
-        # CIK (Central Index Key)
-        cik = soup.find('cik')
-        if cik:
-            metadata['CIK'] = cik.get_text()
-
-        # SIC Code (Standard Industrial Classification)
-        sic = soup.find('sic')
-        if sic:
-            metadata['SIC'] = sic.get_text()
-
-        # Public Float
-        public_float = soup.find('pubfloatusd')
-        if public_float:
-            metadata['Public Float'] = public_float.get_text()
-
-        return metadata
-
-    def parse_financial_data(self, filing_data: str) -> dict:
-        """Parses financial data such as revenue, net income, and assets from the 10-K filings."""
-        soup = BeautifulSoup(filing_data, 'html.parser')
-
-        financial_data = {}
-
-        revenue = soup.find('revenue')
-        if revenue:
-            financial_data['Revenue'] = revenue.get_text()
-
-        net_income = soup.find('net_income')
-        if net_income:
-            financial_data['Net Income'] = net_income.get_text()
-
-        assets = soup.find('assets')
-        if assets:
-            financial_data['Assets'] = assets.get_text()
-
-        liabilities = soup.find('liabilities')
-        if liabilities:
-            financial_data['Liabilities'] = liabilities.get_text()
-
-        return financial_data
-
-
-@tool
-def sec_filing_tool(company_ticker: str) -> dict:
-    """
-    A tool that uses SecFilingTool class to fetch and parse 10-K data for a given company ticker.
-
-    Parameters:
-    ----------
-    company_ticker : str
-        The ticker symbol of the company to analyze.
-    
-    Returns:
-    --------
-    dict
-        A dictionary containing the metadata and financial data of the company's 10-K filing.
-    """
-    tool = SecFilingTool()
-    filing_data = tool.fetch_10k(company_ticker)
-    if "Error" in filing_data:
-        return {"Error": filing_data}
-    
-    metadata = tool.parse_metadata(filing_data)
-    financial_data = tool.parse_financial_data(filing_data)
-
-    return {
-        "Metadata": metadata,
-        "Financial Data": financial_data
-    }
+            return {"Error": f"Failed to download submission text. Status code: {response.status_code}"}
