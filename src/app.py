@@ -10,7 +10,6 @@ from utils.helpers import get_openai_api_key, get_serper_api_key
 openai_api_key = get_openai_api_key()
 serper_api_key = get_serper_api_key()
 
-
 st.title("SEC 10-K Analysis Dashboard")
 
 # Input for the company name
@@ -33,5 +32,13 @@ if st.button("Analyze"):
                 st.write("### 10-K Filings")
                 filings_df = pd.DataFrame(result["10-K Filings"])
                 st.dataframe(filings_df)
+
+                # Fetch detailed analysis for each 10-K filing
+                st.write("### 10-K Report Analysis")
+                for filing in result["10-K Filings"]:
+                    filing_url = filing["Filing URL"]
+                    submission_text = result["Summary Report"].extract_submission_text_url(filing_url)
+                    st.write(f"#### Analysis for {filing['Accession Number']}")
+                    st.text(submission_text)
     else:
         st.warning("Please enter a valid company name.")

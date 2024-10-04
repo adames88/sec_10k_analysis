@@ -13,8 +13,8 @@ sec_filing_tool = SecFilingTool()
 # Define a wrapper to register the SEC filing tool correctly
 fetch_sec_data_tool = Tool(
     name="SEC Filing Tool",
-    func=sec_filing_tool.fetch_submissions,  # Correctly reference the function as func
-    description="Fetch SEC filings for the company based on CIK."
+    func=sec_filing_tool.fetch_submissions,  # Correct reference to the tool method
+    description="Fetch SEC filings for the company based on CIK.",
 )
 
 # Step 1: Define the SEC Search Agent
@@ -40,12 +40,13 @@ analysis_agent = Agent(
 # Task: Fetch 10-K Filings Task
 fetch_10k_task = Task(
     description=(
-        "Retrieve the 10-K filings for the company from the SEC using the company's name. "
+        "Retrieve the 10-K filings for the company from the SEC using the company's CIK. "
         "Use the SEC API to retrieve the 10-K filings, including the filing dates and URLs."
     ),
     expected_output="A list of 10-K filings including URLs to access the documents.",
     agent=search_agent,
-    tools=[fetch_sec_data_tool]  # Ensure the tool is correctly passed to the task
+    tools=[fetch_sec_data_tool],  # Ensure the tool is correctly passed to the task
+    inputs={"CIK": "{cik}"}  # Correct input format
 )
 
 # Task: Analyze 10-K Filings Task
@@ -83,7 +84,7 @@ def analyze_company(company_name: str) -> dict:
     sec_analysis_crew.kickoff(inputs={"company_name": company_name, "cik": company_cik})
 
     # After the crew process, we expect to have both fetched and analyzed the filings
-    filings_data = sec_filing_tool.fetch_submissions(company_cik)
+    filings_data = sec_filing_tool.fetch_submissions(company_cik)  # Pass CIK directly
     if "Error" in filings_data:
         return {"Error": filings_data["Error"]}
 
@@ -101,4 +102,3 @@ def analyze_company(company_name: str) -> dict:
         "10-K Filings": ten_k_filings,
         "Summary Report": summary_report
     }
-
