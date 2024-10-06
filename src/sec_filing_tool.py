@@ -1,12 +1,14 @@
 import requests
 import logging
+from bs4 import BeautifulSoup
 
 class SecFilingTool:
     def __init__(self):
         # New endpoint based on correct structure
         self.edgar_company_search_url = "https://efts.sec.gov/LATEST/search-index"
-        self.headers = {"User-Agent": "YourAppName"}
-
+        self.headers = {
+            "User-Agent": "Sensai Consulting AdminContact@sensai-consulting.com",
+        }
     def get_cik(self, company_name: str) -> str:
         """
         Fetch the CIK (Central Index Key) for the given company name using SEC's EDGAR API.
@@ -92,7 +94,7 @@ class SecFilingTool:
 
     def extract_submission_text_url(self, filing_url: str) -> str:
         """
-        Scrape the filing URL page to find the "Complete submission text files" link.
+        Scrape the filing URL page to find the "Complete submission text file" link.
         """
         response = requests.get(filing_url, headers=self.headers)
         if response.status_code != 200:
@@ -100,12 +102,21 @@ class SecFilingTool:
 
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Look for the "Complete submission text files" link
-        link = soup.find('a', text='Complete submission text files')
-        if link and link.get('href'):
-            return f"https://www.sec.gov{link.get('href')}"
-        else:
-            return {"Error": "Complete submission text file not found"}
+        # Look for all table rows
+        rows = soup.find_all('tr')
+        
+        # Iterate through rows to find the one with "Complete submission text file"
+        for row in rows:
+            cells = row.find_all('td')
+            if len(cells) > 1 and 'Complete submission text file' in cells[1].get_text():
+                # Get the link from the third cell
+                link = cells[2].find('a')
+                if link and link.get('href'):
+                    return f"https://www.sec.gov{link.get('href')}"
+        
+        return {"Error": "Complete submission text file not found"}
+
+
 
     def download_submission_text(self, submission_text_url: str) -> str:
         """

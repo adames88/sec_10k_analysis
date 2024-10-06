@@ -5,13 +5,14 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from crewai_backend import analyze_company
 import pandas as pd
 from utils.helpers import get_openai_api_key, get_serper_api_key
-
+from sec_filing_tool import SecFilingTool
 # Set OpenAI model key and serper key:
 openai_api_key = get_openai_api_key()
 serper_api_key = get_serper_api_key()
 
 st.title("SEC 10-K Analysis Dashboard")
 
+Sec_filing_tool = SecFilingTool()
 # Input for the company name
 company_name = st.text_input("Enter a company name (e.g., Apple, Tesla):")
 
@@ -37,7 +38,7 @@ if st.button("Analyze"):
                 st.write("### 10-K Report Analysis")
                 for filing in result["10-K Filings"]:
                     filing_url = filing["Filing URL"]
-                    submission_text = result["Summary Report"].extract_submission_text_url(filing_url)
+                    submission_text = Sec_filing_tool.extract_submission_text_url(filing_url)
                     st.write(f"#### Analysis for {filing['Accession Number']}")
                     st.text(submission_text)
     else:
